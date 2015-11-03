@@ -7,6 +7,8 @@ import Ember from 'ember';
 import Base from 'ember-cp-validations/validators/base';
 
 const {
+  get,
+  typeOf,
   isEmpty
 } = Ember;
 
@@ -21,14 +23,27 @@ export default Base.extend({
   },
 
   validate(value, options) {
-    if (options.presence === true && isEmpty(value)) {
+    if (options.presence === true && !this._isPresent(value)) {
       return this.createErrorMessage('blank', value, options);
     }
 
-    if(options.presence === false && !isEmpty(value)) {
+    if(options.presence === false && this._isPresent(value)) {
       return this.createErrorMessage('present', value, options);
     }
 
     return true;
+  },
+
+  /**
+   * Handle presence of ember-data promise proxy based instances
+   */
+  _isPresent(value) {
+    if(typeOf(value) === 'instance' && value.constructor) {
+      const type = value.constructor.toString();
+      if(['DS.PromiseObject', 'DS.PromiseArray'].indexOf(type) !== -1) {
+        return this._isPresent(get(value, 'content'));
+      }
+    }
+    return !isEmpty(value);
   }
 });
