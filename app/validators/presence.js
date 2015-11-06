@@ -8,7 +8,6 @@ import Base from 'ember-cp-validations/validators/base';
 
 const {
   get,
-  typeOf,
   isEmpty
 } = Ember;
 
@@ -35,14 +34,11 @@ export default Base.extend({
   },
 
   /**
-   * Handle presence of ember-data promise proxy based instances
+   * Handle presence of ember proxy based instances
    */
   _isPresent(value) {
-    if(typeOf(value) === 'instance' && value.constructor) {
-      const type = value.constructor.toString();
-      if(['DS.PromiseObject', 'DS.PromiseArray'].indexOf(type) !== -1) {
+    if(Ember.ObjectProxy.detectInstance(value) || Ember.ArrayProxy.detectInstance(value)) {
         return this._isPresent(get(value, 'content'));
-      }
     }
     return !isEmpty(value);
   }
